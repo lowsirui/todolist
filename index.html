@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>To Do List</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --desk:#2e3630;
+  --paper:#E4D69F;
+  --ink:#2c221e;
+  --rule:rgba(120,90,70,.25);
+  --margin:#8b3a2b;
+  --accent:#5c4033;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;min-height:100vh;padding:20px 14px 60px;color:var(--ink);
+  font-family:"Roboto",sans-serif;
+  background:#374A1F;
+  -webkit-tap-highlight-color: transparent;
+}
+.wrap{max-width:700px;margin:0 auto}
+
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.days{display:flex;gap:8px;flex-wrap:wrap}
+.days button{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;font-size:16px;font-weight:600;
+  padding:10px 16px;border:1.5px solid var(--accent);background:#fcf8f2;color:var(--accent);
+  border-radius:4px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);
+  display:flex;align-items:center;touch-action:manipulation;min-height:42px;
+}
+.days button.on{background:var(--accent);color:#fcf8f2}
+.tab-text{outline:none;display:inline-block;min-width:10px;}
+.tab-text:focus{background:rgba(255,255,255,.4);border-radius:2px;padding:0 2px;}
+
+.day-actions{display:flex;gap:8px}
+.day-actions button{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;font-size:15px;padding:8px 14px;
+  background:#fcf8f2;border:1.5px solid var(--accent);color:var(--accent);cursor:pointer;border-radius:2px;font-weight:600;
+  touch-action:manipulation;min-height:38px;
+}
+.day-actions button:hover, .day-actions button:active{background:var(--accent);color:#fcf8f2}
+
+.pad{
+  position:relative;background:var(--paper);padding:40px 30px 36px 70px;
+  border-radius:4px;border:2px solid #dcd3c0;
+  box-shadow:0 4px 18px rgba(0,0,0,.08), inset 0 0 40px rgba(180,160,130,.15);
+}
+.pad::after{content:"";position:absolute;left:52px;top:0;bottom:0;width:1.5px;background:var(--margin);opacity:.6}
+
+h1{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;font-size:32px;line-height:1.2;margin:0 0 6px 0;
+  color:#3a271d;letter-spacing:1px;text-align:center;border-bottom:2px double var(--accent);padding-bottom:10px;
+  font-weight:bold;text-transform:uppercase;
+}
+h2{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;font-size:18px;line-height:1.3;margin:28px 0 6px 0;
+  color:#4a3328;letter-spacing:.5px;border-bottom:1px solid var(--accent);padding-bottom:3px;
+  font-weight:bold;text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;
+}
+h2 .sec-del{
+  background:none;border:0;color:var(--accent);cursor:pointer;font-size:14px;opacity:0.6;padding:2px 6px;border-radius:2px;touch-action:manipulation;
+}
+h2 .sec-del:hover, h2 .sec-del:active{opacity:1;background:rgba(0,0,0,0.08);}
+
+ul{list-style:none;margin:0;padding:0;min-height:12px}
+li{
+  display:flex;align-items:flex-start;gap:10px;min-height:38px;padding:6px 0;
+  border-bottom:1px solid var(--rule);cursor:grab;position:relative;
+}
+li.over{background:rgba(139,58,43,.08)}
+li.dragging{opacity:.35}
+li input[type="checkbox"]{
+  appearance:none;-webkit-appearance:none;flex:none;width:22px;height:22px;margin:2px 0 0;
+  border:1.5px solid var(--accent);border-radius:2px;background:rgba(255,255,255,.6);cursor:pointer;position:relative;
+  touch-action:manipulation;
+}
+li input[type="checkbox"]:checked{
+  background:rgba(255,255,255,.9);
+}
+li input[type="checkbox"]:checked::after{
+  content:"\2713";position:absolute;left:3px;top:-3px;font:bold 18px "Cormorant Garamond",serif;color:var(--margin)
+}
+.t{flex:1;font-size:15px;line-height:1.4;outline:none;min-width:0;overflow-wrap:anywhere;font-family:"Sagona", serif;color:var(--ink)}
+.t:focus{background:rgba(255,255,255,.6);padding-left:4px;border-radius:2px}
+li.done .t{
+  text-decoration: line-through;
+  text-decoration-color: var(--margin);
+  -webkit-text-decoration-color: var(--margin);
+  text-decoration-thickness: 1.5px;
+  opacity: .5;
+}
+
+.ctl{display:flex;gap:2px;flex:none}
+.ctl button,.add{font:inherit;border:0;background:none;color:var(--ink);cursor:pointer}
+.ctl button{width:28px;height:28px;font-size:14px;opacity:.6;border-radius:2px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
+.ctl button:hover, .ctl button:active{opacity:1;background:rgba(0,0,0,.08)}
+.add{margin:8px 0 0;font-size:14px;font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;font-weight:600;opacity:.8;padding:6px 0;color:var(--accent);touch-action:manipulation;}
+.add:hover{opacity:1;text-decoration:underline}
+
+.bank{margin-top:24px;background:#ede4d3;border:1.5px dashed rgba(92,64,51,.4);border-radius:4px;padding:12px 16px 14px}
+.bank>p{margin:0 0 2px;font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;font-size:16px;color:#3a271d;font-weight:bold;text-transform:uppercase}
+.bank small{display:block;opacity:.75;margin:0 0 8px;font-size:12px;font-style:italic}
+details{border-top:1px solid rgba(92,64,51,.2);padding:4px 0}
+summary{cursor:pointer;font-size:14px;font-weight:600;padding:6px 0;font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;color:#3a271d;user-select:none;}
+.pills{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 4px}
+.pills button{
+  font-family:"Roboto",sans-serif;font-size:12px;text-align:left;padding:6px 10px;
+  border:1px solid var(--accent);background:#fcf8f2;color:var(--accent);border-radius:12px;cursor:pointer;
+  touch-action:manipulation;
+}
+.pills button:hover, .pills button:active{background:#fff}
+.pills button:disabled{opacity:.35;cursor:default;text-decoration:line-through}
+
+/* Footer Link */
+.footer-link-wrap{
+  text-align:center;margin-top:24px;padding-top:12px;
+}
+.edit-master-btn{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;
+  font-size:14px;color:#fcf8f2;background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.3);padding:8px 16px;border-radius:20px;
+  cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  transition:all 0.2s ease;
+}
+.edit-master-btn:hover{
+  background:rgba(0,0,0,0.4);border-color:rgba(255,255,255,0.6);
+  transform:translateY(-1px);
+}
+
+/* Custom Modal Dialog */
+.modal-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;
+  z-index:9999;padding:16px;backdrop-filter:blur(2px);
+}
+.modal-overlay.active{display:flex;}
+.modal-box{
+  background:var(--paper);border:2px solid var(--accent);border-radius:6px;
+  padding:20px 24px;max-width:380px;width:100%;box-shadow:0 10px 25px rgba(0,0,0,0.3);
+  color:var(--ink);
+}
+.modal-box h3{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;
+  margin:0 0 10px;font-size:18px;color:#3a271d;border-bottom:1px solid var(--accent);padding-bottom:4px;
+}
+.modal-box p{margin:0 0 18px;font-size:14px;line-height:1.4;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.modal-actions button{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;
+  font-size:14px;padding:6px 14px;border:1.5px solid var(--accent);
+  border-radius:3px;cursor:pointer;font-weight:600;
+}
+.modal-btn-confirm{background:var(--margin);color:#fff;border-color:var(--margin)!important;}
+.modal-btn-cancel{background:#fcf8f2;color:var(--accent);}
+
+/* Master Task List Editor Modal (Large View) */
+.editor-modal-box{
+  background:var(--paper);border:2px solid var(--accent);border-radius:6px;
+  padding:24px;max-width:760px;width:100%;max-height:88vh;display:flex;flex-direction:column;
+  box-shadow:0 12px 30px rgba(0,0,0,0.4);color:var(--ink);
+}
+.editor-header{
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:2px double var(--accent);padding-bottom:12px;margin-bottom:16px;
+}
+.editor-header h2{
+  margin:0;border:none;padding:0;font-size:22px;color:#3a271d;
+}
+.editor-content{
+  overflow-y:auto;flex:1;padding-right:8px;margin-bottom:16px;
+}
+.editor-tabs{
+  display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--rule);padding-bottom:8px;
+}
+.editor-tab{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;
+  padding:6px 14px;border:1px solid var(--accent);background:#fcf8f2;
+  color:var(--accent);border-radius:4px;cursor:pointer;font-size:13px;
+}
+.editor-tab.active{background:var(--accent);color:#fcf8f2;}
+.editor-sec{
+  background:rgba(255,255,255,0.3);border:1px solid var(--rule);
+  border-radius:4px;padding:12px 14px;margin-bottom:14px;
+}
+.editor-sec-head{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;
+}
+.editor-input-title{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;
+  font-size:16px;font-weight:bold;color:#3a271d;background:transparent;
+  border:1px dashed var(--accent);padding:4px 8px;border-radius:3px;flex:1;
+}
+.editor-item-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:6px;
+}
+.editor-input-item{
+  flex:1;font-size:14px;padding:6px 8px;border:1px solid rgba(92,64,51,0.3);
+  border-radius:3px;background:#fcf8f2;font-family:"Roboto",sans-serif;
+}
+.btn-del-sm{
+  background:none;border:none;color:var(--margin);cursor:pointer;font-size:16px;
+  padding:2px 8px;border-radius:3px;font-weight:bold;
+}
+.btn-del-sm:hover{background:rgba(139,58,43,0.15);}
+.btn-add-sm{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;
+  font-size:13px;background:none;border:1px dashed var(--accent);
+  color:var(--accent);padding:4px 10px;border-radius:3px;cursor:pointer;margin-top:6px;
+}
+.btn-add-sm:hover{background:rgba(92,64,51,0.1);}
+.btn-add-sec{
+  font-family:"Berlin Sans FB Demi", "Berlin Sans FB", sans-serif;
+  font-size:14px;background:#fcf8f2;border:1.5px solid var(--accent);
+  color:var(--accent);padding:8px 16px;border-radius:4px;cursor:pointer;width:100%;
+  margin-top:8px;font-weight:600;
+}
+.btn-add-sec:hover{background:var(--accent);color:#fcf8f2;}
+.editor-actions{
+  display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--rule);padding-top:12px;
+}
+
+@media(max-width:520px){
+  body{padding:14px 8px 40px;}
+  .pad{padding:24px 16px 20px 16px;}
+  .pad::after{display:none;}
+  h1{font-size:24px;}
+  h2{font-size:16px;margin:20px 0 6px 0;}
+  .top-bar{gap:8px;}
+  .day-actions button, .days button{padding:6px 10px;font-size:14px;}
+  .editor-modal-box{padding:16px;max-height:92vh;}
+}
+:focus-visible{outline:1.5px solid var(--margin);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top-bar">
+    <div class="days" id="days"></div>
+    <div class="day-actions">
+      <button id="add-day" title="Add Next Day's List">+ Add Next Day</button>
+      <button id="del-day" title="Delete This Day's List">Delete Day</button>
+    </div>
+  </div>
+  <div class="pad" id="pad"></div>
+  <div class="bank" id="bank"></div>
+  
+  <!-- Footer Link for Editing Master Task List -->
+  <div class="footer-link-wrap">
+    <button class="edit-master-btn" id="open-master-editor">
+      <span>&#9998;</span> Edit Master Task List
+    </button>
+  </div>
+</div>
+
+<!-- Custom Modal UI for alerts & confirmations -->
+<div class="modal-overlay" id="custom-modal">
+  <div class="modal-box">
+    <h3 id="modal-title">Notice</h3>
+    <p id="modal-msg"></p>
+    <div class="modal-actions">
+      <button id="modal-cancel-btn" class="modal-btn-cancel">Cancel</button>
+      <button id="modal-confirm-btn" class="modal-btn-confirm">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Master Task List Editor Modal -->
+<div class="modal-overlay" id="editor-modal">
+  <div class="editor-modal-box">
+    <div class="editor-header">
+      <h2>Edit Master Task List</h2>
+      <button class="btn-del-sm" id="close-editor-x" style="font-size:20px;">&#10005;</button>
+    </div>
+    <div class="editor-tabs">
+      <button class="editor-tab active" id="tab-btn-base" onclick="switchEditorTab('base')">Daily Template Sections</button>
+      <button class="editor-tab" id="tab-btn-bank" onclick="switchEditorTab('bank')">Bank Categories & Tasks</button>
+    </div>
+    <div class="editor-content" id="editor-content">
+      <!-- Dynamic editor content rendered here -->
+    </div>
+    <div class="editor-actions">
+      <button class="day-actions" style="display:inline-block;" onclick="closeEditorModal()">Cancel</button>
+      <button class="modal-btn-confirm" style="font-family:'Berlin Sans FB Demi',sans-serif;font-size:14px;padding:6px 16px;border-radius:3px;cursor:pointer;" onclick="saveMasterEditor()">Save Master List</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_BASE = [
+  ['Morning routine',[['Drink a glass of water'],['Wash face']]],
+  ['Admin items',[['Plan tomorrow'],['Lunch'],['Exercise'],['Do physio'],['Do laundry']]],
+  ['Core wins',[['Book Classpass']]],
+  ['Night time routine',[['Gratitude journal'],['Dinner'],['Brush teeth'],['Shower'],['Relationship check-in'],['Clean retainer'],['Investment (Currency above 0.784, see if 0.79 is possible, VOO 644)'],['Birth control pill']]]
+];
+
+const DEFAULT_BANK = {
+ 'Work checklist':['VN social post-recovery plan','AI project lead','Prepare AI/DC slides','Cost the BI audio feature',"Explore Salil's podcast",'APAC socials','SC socials','BI articles','Paid socials','BI eNews','Influencers','BI website','Emails and pings','Monthly roundup','FY27 OOPs budget','Quarterly reports','FY27 social plan and KPIs','Complete AiM','Take 4 extra days off (Email Julia only)','Julia 1:1 (AiM, AI/DC script)','Freelance work (Nov content)','Freelance work (Kitchen Star, Kitchen Shoot)'],
+ 'Housing':['Go to Honpo and bring flooring sample','JC Bespoke: Kitchen sideboard WIP / TV console redesign / Vinyl sideboard pending final drawings','26,105 NTUC'],
+ 'Life plan':['Household chores (Clean floor, wash floor rags, throw trash, do laundry, wash bedding, buy groceries)','Pay credit card bills','Dad TikTok','Self-care beauty (Eyebrow threading, moustache plucking, body shaving, eyelash, nails, hair)','Travel: SGD 160 for Hong Kong, SGD 100 for Macau, SGD 100 for Chengdu','Travel: Buy Queenstown flight tickets with Joiz','Travel: Plan UK honeymoon','Shopping (SG60 vouchers by end-2026, CDC vouchers by end-2026, Culture vouchers by 2028)',"Plan Nick's 33rd birthday"],
+ 'Physio':['Diamond crunches (work up to 100)','Angled calf raises','Lunge to lifted leg hold','Closed eye one-leg balance with head turn','Ankle resistance band']
+};
+
+let BASE = [];
+let BANK = {};
+
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+let lists = [];
+let activeIndex = 0;
+let tempMasterBase = [];
+let tempMasterBank = {};
+let currentEditorTab = 'base';
+
+function createNewList(name = 'Template') {
+  return {
+    id: uid(),
+    name: name,
+    sections: BASE.map(([n, items]) => ({
+      id: uid(),
+      name: n,
+      base: 1,
+      items: items.map(i => ({id: uid(), t: i[0], done: 0}))
+    }))
+  };
+}
+
+function initStorage() {
+  try {
+    const savedBase = localStorage.getItem('victorian_todo_master_base');
+    const savedBank = localStorage.getItem('victorian_todo_master_bank');
+    
+    if (savedBase) BASE = JSON.parse(savedBase);
+    else BASE = JSON.parse(JSON.stringify(DEFAULT_BASE));
+    
+    if (savedBank) BANK = JSON.parse(savedBank);
+    else BANK = JSON.parse(JSON.stringify(DEFAULT_BANK));
+
+    const savedLists = localStorage.getItem('victorian_todo_lists');
+    if (savedLists) {
+      lists = JSON.parse(savedLists);
+    }
+  } catch(e) {
+    console.error('Error loading storage', e);
+    BASE = JSON.parse(JSON.stringify(DEFAULT_BASE));
+    BANK = JSON.parse(JSON.stringify(DEFAULT_BANK));
+  }
+  
+  if (!Array.isArray(lists) || lists.length === 0) {
+    lists = [createNewList('Template')];
+    activeIndex = 0;
+  }
+}
+
+function save() {
+  try {
+    localStorage.setItem('victorian_todo_lists', JSON.stringify(lists));
+    localStorage.setItem('victorian_todo_master_base', JSON.stringify(BASE));
+    localStorage.setItem('victorian_todo_master_bank', JSON.stringify(BANK));
+  } catch(e) {}
+}
+
+function render() {
+  try {
+    if (activeIndex >= lists.length) activeIndex = Math.max(0, lists.length - 1);
+    const S = lists[activeIndex];
+    if (!S || !Array.isArray(S.sections)) {
+      lists = [createNewList('Template')];
+      activeIndex = 0;
+    }
+
+    const currentS = lists[activeIndex];
+
+    // Render day tabs
+    $('#days').innerHTML = lists.map((l, idx) => 
+      `<button data-idx="${idx}" class="${idx === activeIndex ? 'on' : ''}">
+         <span class="tab-text" contenteditable="${idx === activeIndex}" spellcheck="false">${esc(l.name)}</span>
+       </button>`
+    ).join('');
+
+    let h = `<h1>To Do List</h1>`;
+    if (currentS && currentS.sections) {
+      currentS.sections.forEach(sec => {
+        if (!sec.base && (!sec.items || !sec.items.length)) return;
+        h += `<section data-s="${sec.id}">
+                <h2>
+                  <span>${esc(sec.name)}</span>
+                  <button class="sec-del" data-a="del-sec" title="Delete Section" aria-label="Delete Section">&#10005;</button>
+                </h2>
+                <ul data-s="${sec.id}">` +
+        (sec.items || []).map(it => `<li draggable="true" data-i="${it.id}" class="${it.done?'done':''}">
+          <input type="checkbox" aria-label="Done" ${it.done?'checked':''}>
+          <span class="t" contenteditable="true" spellcheck="false">${esc(it.t)}</span>
+          <span class="ctl"><button data-a="del" title="Remove" aria-label="Remove">&#10005;</button></span></li>`).join('') +
+        `</ul><button class="add" data-a="add">+ add a line</button></section>`;
+      });
+    }
+    $('#pad').innerHTML = h;
+
+    const have = currentS ? new Set(currentS.sections.flatMap(s => (s.items || []).map(i => i.t))) : new Set();
+    $('#bank').innerHTML = `<p>Master Task List</p><small>Tap an item to send it straight to your Core Wins section.</small>` +
+      Object.entries(BANK).map(([k,v]) => `<details><summary>${esc(k)}</summary><div class="pills">` +
+      v.map(t => `<button data-cat="${esc(k)}" data-t="${esc(t)}" ${have.has(t)?'disabled':''}>${esc(t)}</button>`).join('') + `</div></details>`).join('');
+  } catch (err) {
+    console.error('Render error:', err);
+  }
+}
+
+function find(id) {
+  const S = lists[activeIndex];
+  if (!S || !S.sections) return [null, -1, null];
+  for (const s of S.sections) {
+    if (!s.items) continue;
+    const i = s.items.findIndex(x => x.id === id);
+    if (i > -1) return [s, i, S];
+  }
+  return [null, -1, null];
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+// Modal Dialog Helpers
+function showModal({ title, msg, isConfirm = false, onConfirm }) {
+  const modal = $('#custom-modal');
+  $('#modal-title').textContent = title;
+  $('#modal-msg').textContent = msg;
+  const cancelBtn = $('#modal-cancel-btn');
+  cancelBtn.style.display = isConfirm ? 'inline-block' : 'none';
+  
+  const confirmBtn = $('#modal-confirm-btn');
+  
+  const close = () => {
+    modal.classList.remove('active');
+    confirmBtn.onclick = null;
+    cancelBtn.onclick = null;
+  };
+  
+  confirmBtn.onclick = () => {
+    close();
+    if (onConfirm) onConfirm();
+  };
+  cancelBtn.onclick = close;
+  modal.classList.add('active');
+}
+
+/* Master Task List Editor Logic */
+function openMasterEditor() {
+  tempMasterBase = JSON.parse(JSON.stringify(BASE));
+  tempMasterBank = JSON.parse(JSON.stringify(BANK));
+  currentEditorTab = 'base';
+  updateEditorTabsUI();
+  renderEditorContent();
+  $('#editor-modal').classList.add('active');
+}
+
+function closeEditorModal() {
+  $('#editor-modal').classList.remove('active');
+}
+
+function switchEditorTab(tab) {
+  currentEditorTab = tab;
+  updateEditorTabsUI();
+  renderEditorContent();
+}
+
+function updateEditorTabsUI() {
+  $('#tab-btn-base').classList.toggle('active', currentEditorTab === 'base');
+  $('#tab-btn-bank').classList.toggle('active', currentEditorTab === 'bank');
+}
+
+function renderEditorContent() {
+  const container = $('#editor-content');
+  let h = '';
+
+  if (currentEditorTab === 'base') {
+    tempMasterBase.forEach((sec, sIdx) => {
+      const [secTitle, items] = sec;
+      h += `<div class="editor-sec">
+        <div class="editor-sec-head">
+          <input type="text" class="editor-input-title" value="${esc(secTitle)}" onchange="tempMasterBase[${sIdx}][0]=this.value">
+          <button class="btn-del-sm" onclick="deleteBaseSec(${sIdx})" title="Delete Section">&#10005;</button>
+        </div>
+        <div class="editor-items-list">`;
+      items.forEach((it, iIdx) => {
+        h += `<div class="editor-item-row">
+          <input type="text" class="editor-input-item" value="${esc(it[0])}" onchange="tempMasterBase[${sIdx}][1][${iIdx}][0]=this.value">
+          <button class="btn-del-sm" onclick="deleteBaseItem(${sIdx}, ${iIdx})" title="Delete Task">&#10005;</button>
+        </div>`;
+      });
+      h += `</div>
+        <button class="btn-add-sm" onclick="addBaseItem(${sIdx})">+ Add Task Item</button>
+      </div>`;
+    });
+    h += `<button class="btn-add-sec" onclick="addBaseSec()">+ Add New Section</button>`;
+  } else {
+    Object.entries(tempMasterBank).forEach(([cat, items], cIdx) => {
+      h += `<div class="editor-sec">
+        <div class="editor-sec-head">
+          <input type="text" class="editor-input-title" value="${esc(cat)}" onchange="updateBankCatName('${esc(cat)}', this.value)">
+          <button class="btn-del-sm" onclick="deleteBankCat('${esc(cat)}')" title="Delete Category">&#10005;</button>
+        </div>
+        <div class="editor-items-list">`;
+      items.forEach((it, iIdx) => {
+        h += `<div class="editor-item-row">
+          <input type="text" class="editor-input-item" value="${esc(it)}" onchange="tempMasterBank['${esc(cat)}'][${iIdx}]=this.value">
+          <button class="btn-del-sm" onclick="deleteBankItem('${esc(cat)}', ${iIdx})" title="Delete Item">&#10005;</button>
+        </div>`;
+      });
+      h += `</div>
+        <button class="btn-add-sm" onclick="addBankItem('${esc(cat)}')">+ Add Category Task</button>
+      </div>`;
+    });
+    h += `<button class="btn-add-sec" onclick="addBankCat()">+ Add New Bank Category</button>`;
+  }
+
+  container.innerHTML = h;
+}
+
+function deleteBaseSec(sIdx) {
+  tempMasterBase.splice(sIdx, 1);
+  renderEditorContent();
+}
+
+function addBaseSec() {
+  tempMasterBase.push(['New Section', []]);
+  renderEditorContent();
+}
+
+function deleteBaseItem(sIdx, iIdx) {
+  tempMasterBase[sIdx][1].splice(iIdx, 1);
+  renderEditorContent();
+}
+
+function addBaseItem(sIdx) {
+  tempMasterBase[sIdx][1].push(['']);
+  renderEditorContent();
+}
+
+function updateBankCatName(oldCat, newCat) {
+  if (!newCat.trim() || oldCat === newCat) return;
+  const items = tempMasterBank[oldCat] || [];
+  delete tempMasterBank[oldCat];
+  tempMasterBank[newCat.trim()] = items;
+  renderEditorContent();
+}
+
+function deleteBankCat(cat) {
+  delete tempMasterBank[cat];
+  renderEditorContent();
+}
+
+function addBankCat() {
+  let name = 'New Category';
+  let counter = 1;
+  while (tempMasterBank[name]) {
+    name = `New Category ${counter++}`;
+  }
+  tempMasterBank[name] = [];
+  renderEditorContent();
+}
+
+function deleteBankItem(cat, iIdx) {
+  if (tempMasterBank[cat]) {
+    tempMasterBank[cat].splice(iIdx, 1);
+    renderEditorContent();
+  }
+}
+
+function addBankItem(cat) {
+  if (tempMasterBank[cat]) {
+    tempMasterBank[cat].push('');
+    renderEditorContent();
+  }
+}
+
+function saveMasterEditor() {
+  // Clean up empty items and sections before saving
+  BASE = tempMasterBase.map(([sName, items]) => [
+    sName.trim() || 'Untitled Section',
+    items.map(i => [i[0].trim()]).filter(i => i[0] !== '')
+  ]);
+
+  const cleanedBank = {};
+  Object.entries(tempMasterBank).forEach(([cat, items]) => {
+    const cName = cat.trim();
+    if (cName) {
+      cleanedBank[cName] = items.map(i => i.trim()).filter(i => i !== '');
+    }
+  });
+  BANK = cleanedBank;
+
+  save();
+  closeEditorModal();
+  render();
+  
+  showModal({
+    title: "Master List Saved",
+    msg: "Your Master Task List template has been saved! Future 'Add Next Day' lists will use these updated sections and tasks."
+  });
+}
+
+$('#open-master-editor').onclick = openMasterEditor;
+$('#close-editor-x').onclick = closeEditorModal;
+
+// Event Listeners for Day Tabs (Single-tap tab switching)
+$('#days').addEventListener('pointerdown', e => {
+  const b = e.target.closest('button');
+  if (b) {
+    const idx = +b.dataset.idx;
+    if (!isNaN(idx) && idx !== activeIndex) {
+      activeIndex = idx;
+      render();
+    }
+  }
+});
+
+$('#days').addEventListener('input', e => {
+  if (!e.target.matches('.tab-text')) return;
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const idx = +btn.dataset.idx;
+  if (lists[idx]) {
+    lists[idx].name = e.target.textContent.trim() || 'Untitled';
+    save();
+  }
+});
+
+$('#days').addEventListener('keydown', e => {
+  if (e.target.matches('.tab-text') && e.key === 'Enter') {
+    e.preventDefault();
+    e.target.blur();
+  }
+});
+
+$('#days').addEventListener('focusout', e => {
+  if (!e.target.matches('.tab-text')) return;
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const idx = +btn.dataset.idx;
+  if (lists[idx]) {
+    lists[idx].name = e.target.textContent.trim() || 'Template';
+    save();
+    render();
+  }
+});
+
+$('#add-day').onclick = () => {
+  const currentName = lists[activeIndex] ? lists[activeIndex].name.trim() : 'Template';
+  let nextName = 'Next Day';
+  const weekDays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  
+  const currentIdx = weekDays.findIndex(d => d.toLowerCase() === currentName.toLowerCase());
+  if (currentIdx !== -1) {
+    nextName = weekDays[(currentIdx + 1) % weekDays.length];
+  } else {
+    const existingNames = lists.map(l => l.name.toLowerCase());
+    for (const d of weekDays) {
+      if (!existingNames.includes(d.toLowerCase())) {
+        nextName = d;
+        break;
+      }
+    }
+  }
+
+  lists.push(createNewList(nextName));
+  activeIndex = lists.length - 1;
+  save();
+  render();
+};
+
+// Delete Day functionality
+$('#del-day').onclick = (e) => {
+  e.preventDefault();
+  if (lists.length <= 1) {
+    showModal({
+      title: "Action Not Allowed",
+      msg: "You must keep at least one list in your notepad."
+    });
+    return;
+  }
+  
+  showModal({
+    title: "Delete Day",
+    msg: `Are you sure you want to delete the list for "${lists[activeIndex].name}"?`,
+    isConfirm: true,
+    onConfirm: () => {
+      lists.splice(activeIndex, 1);
+      activeIndex = Math.max(0, activeIndex - 1);
+      save();
+      render();
+    }
+  });
+};
+
+// Checkbox and item done toggle handling
+const toggleItemDone = (target) => {
+  const li = target.closest('li');
+  if (!li) return;
+  const [s, i] = find(li.dataset.i);
+  if (s && s.items && s.items[i]) {
+    s.items[i].done = target.checked ? 1 : 0;
+    save();
+    if (target.checked) {
+      li.classList.add('done');
+    } else {
+      li.classList.remove('done');
+    }
+  }
+};
+
+$('#pad').addEventListener('change', e => {
+  if (e.target.matches('input[type="checkbox"]')) {
+    toggleItemDone(e.target);
+  }
+});
+
+$('#pad').addEventListener('click', e => {
+  const b = e.target.closest('[data-a]');
+  if (!b) return;
+  const a = b.dataset.a;
+  const S = lists[activeIndex];
+  if (!S) return;
+
+  // Delete Section Handler
+  if (a === 'del-sec') {
+    const secEl = b.closest('section');
+    if (!secEl) return;
+    const secId = secEl.dataset.s;
+    const secObj = S.sections.find(s => s.id === secId);
+    const secName = secObj ? secObj.name : 'this section';
+
+    showModal({
+      title: "Delete Section",
+      msg: `Are you sure you want to delete the entire section "${secName}" and all its tasks?`,
+      isConfirm: true,
+      onConfirm: () => {
+        S.sections = S.sections.filter(s => s.id !== secId);
+        save();
+        render();
+      }
+    });
+    return;
+  }
+
+  if (a === 'add') {
+    const secEl = b.closest('section');
+    if (!secEl) return;
+    const sec = S.sections.find(s => s.id === secEl.dataset.s);
+    if (!sec) return;
+    if (!sec.items) sec.items = [];
+    const it = {id: uid(), t: '', done: 0};
+    sec.items.push(it);
+    render();
+    const newEl = document.querySelector(`[data-i="${it.id}"] .t`);
+    if (newEl) newEl.focus();
+    return;
+  }
+
+  const li = b.closest('li');
+  if (!li) return;
+  const [s, i] = find(li.dataset.i);
+  if (a === 'del' && s && s.items) {
+    s.items.splice(i, 1);
+    save();
+    render();
+  }
+});
+
+$('#pad').addEventListener('keydown', e => {
+  if (e.target.matches('.t') && e.key === 'Enter') {
+    e.preventDefault();
+    e.target.blur();
+  }
+});
+
+$('#pad').addEventListener('focusout', e => {
+  if (!e.target.matches('.t')) return;
+  const li = e.target.closest('li');
+  if (!li) return;
+  const [s, i] = find(li.dataset.i);
+  if (!s || !s.items || !s.items[i]) return;
+  const t = e.target.textContent.trim();
+  if (!t) s.items.splice(i, 1);
+  else s.items[i].t = t;
+  save();
+  render();
+});
+
+$('#bank').addEventListener('click', e => {
+  const b = e.target.closest('button[data-t]');
+  if (!b) return;
+  const S = lists[activeIndex];
+  if (!S) return;
+  let coreSec = S.sections.find(s => s.name === 'Core wins');
+  if (!coreSec) {
+    coreSec = {id: uid(), name: 'Core wins', base: 0, items: []};
+    S.sections.unshift(coreSec);
+  }
+  if (!coreSec.items) coreSec.items = [];
+  coreSec.items.push({id: uid(), t: b.dataset.t, done: 0});
+  const open = [...document.querySelectorAll('#bank details')].map(d => d.open);
+  save();
+  render();
+  document.querySelectorAll('#bank details').forEach((d, i) => d.open = open[i]);
+});
+
+// Drag and drop within the list
+let dragId = null;
+const pad = $('#pad');
+pad.addEventListener('dragstart', e => {
+  const li = e.target.closest('li');
+  if (!li) return;
+  dragId = li.dataset.i;
+  li.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+});
+pad.addEventListener('dragend', () => { dragId = null; render(); });
+pad.addEventListener('dragover', e => {
+  if (!dragId) return;
+  e.preventDefault();
+  pad.querySelectorAll('.over').forEach(x => x.classList.remove('over'));
+  const li = e.target.closest('li');
+  if (li && li.dataset.i !== dragId) li.classList.add('over');
+});
+pad.addEventListener('drop', e => {
+  if (!dragId) return;
+  e.preventDefault();
+  const [fs, fi] = find(dragId);
+  if (!fs || !fs.items) return;
+  const [item] = fs.items.splice(fi, 1);
+  const li = e.target.closest('li'), ul = e.target.closest('section');
+  if (li) {
+    const [ts, ti] = find(li.dataset.i);
+    if (ts && ts.items) {
+      const r = li.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+      ts.items.splice(after ? ti + 1 : ti, 0, item);
+    }
+  } else if (ul) {
+    const S = lists[activeIndex];
+    const targetSec = S.sections.find(s => s.id === ul.dataset.s);
+    if (targetSec) {
+      if (!targetSec.items) targetSec.items = [];
+      targetSec.items.push(item);
+    }
+  } else {
+    fs.items.splice(fi, 0, item);
+  }
+  dragId = null;
+  save();
+  render();
+});
+
+initStorage();
+render();
+</script>
+</body>
+</html>
